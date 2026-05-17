@@ -1,0 +1,2 @@
+# Elysium
+Trading Journal
