@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Journal of Elysium">
+<meta name="theme-color" content="#f0f0f0">
+<title>The Journal of Elysium</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Raleway:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cyan: #0099bb;
+  --cyan-bright: #00c8e8;
+  --cyan-glow: rgba(0,153,187,0.12);
+  --gold: #c9920a;
+  --gold-bright: #e8a800;
+  --gold-glow: rgba(201,146,10,0.12);
+  --bg: #efefef;
+  --bg2: #e8e8e8;
+  --bg3: #ffffff;
+  --bg4: #f5f5f5;
+  --text: #1a1a2e;
+  --text-dim: #555577;
+  --text-faint: #8888aa;
+  --border: rgba(0,153,187,0.18);
+  --border-gold: rgba(201,146,10,0.22);
+  --border-light: rgba(0,0,0,0.08);
+  --win: #1a7a3c;
+  --win-bg: rgba(26,122,60,0.08);
+  --win-border: rgba(26,122,60,0.25);
+  --loss: #cc2200;
+  --loss-bg: rgba(204,34,0,0.08);
+  --loss-border: rgba(204,34,0,0.25);
+  --be: #666688;
+  --open-bg: rgba(0,153,187,0.08);
+  --open-border: rgba(0,153,187,0.25);
+  --font-display: 'Cinzel', serif;
+  --font-body: 'Raleway', sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-body);font-weight:400;overflow-x:hidden}
+
+/* Splash */
+#splash{
+  position:fixed;inset:0;z-index:1000;
+  background:linear-gradient(135deg,#efefef 0%,#e0e8ee 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity 0.8s ease;
+}
+#splash.hide{opacity:0;pointer-events:none}
+.splash-emblem{margin-bottom:1.2rem;animation:fadeUp 0.8s ease forwards}
+.splash-logo{font-family:var(--font-display);font-size:clamp(1.4rem,5vw,2.2rem);color:var(--gold);letter-spacing:0.15em;text-align:center;line-height:1.4;animation:fadeUp 1s 0.2s ease forwards;opacity:0}
+.splash-sub{font-size:0.7rem;color:var(--cyan);letter-spacing:0.3em;font-family:var(--font-body);font-weight:400;font-style:italic;margin-top:0.4rem;animation:fadeUp 1s 0.4s ease forwards;opacity:0}
+.splash-line{width:120px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:1.5rem auto;animation:fadeUp 1s 0.6s ease forwards;opacity:0}
+.splash-loading{display:flex;gap:8px;animation:fadeUp 1s 0.8s ease forwards;opacity:0}
+.splash-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:pulse 1.2s infinite}
+.splash-dot:nth-child(2){animation-delay:0.2s;background:var(--gold)}
+.splash-dot:nth-child(3){animation-delay:0.4s}
+@keyframes pulse{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:1;transform:scale(1.2)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* App */
+#app{position:relative;z-index:1;min-height:100vh;padding-bottom:80px;max-width:500px;margin:0 auto}
+
+/* Header */
+.header{
+  padding:0.8rem 1.2rem 0.7rem;
+  border-bottom:0.5px solid var(--border-light);
+  background:rgba(239,239,239,0.95);
+  backdrop-filter:blur(20px);
+  position:sticky;top:0;z-index:100;
+  box-shadow:0 1px 8px rgba(0,0,0,0.06);
+}
+.header-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.header-left{display:flex;align-items:center;gap:10px}
+.logo{font-family:var(--font-display);font-size:0.9rem;color:var(--gold);letter-spacing:0.1em;line-height:1.3}
+.logo span{display:block;font-size:0.52rem;color:var(--cyan);letter-spacing:0.22em;font-family:var(--font-body);font-weight:400;font-style:italic;margin-top:1px}
+.header-balance{text-align:right;flex-shrink:0}
+.header-balance-label{font-size:0.6rem;color:var(--text-faint);letter-spacing:0.1em;text-transform:uppercase}
+.header-balance-value{font-size:1rem;font-weight:600;color:var(--text)}
+
+/* Nav */
+nav{display:flex;position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:500px;background:rgba(239,239,239,0.97);backdrop-filter:blur(20px);border-top:0.5px solid var(--border-light);z-index:200;box-shadow:0 -2px 12px rgba(0,0,0,0.06)}
+nav button{flex:1;padding:0.7rem 0.25rem 0.55rem;background:none;border:none;color:var(--text-faint);font-size:0.55rem;font-family:var(--font-body);letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:color 0.2s;display:flex;flex-direction:column;align-items:center;gap:3px}
+nav button.active{color:var(--cyan)}
+nav button svg{width:19px;height:19px;stroke-width:1.5;stroke:var(--text-faint);fill:none;transition:stroke 0.2s}
+nav button.active svg{stroke:var(--cyan)}
+
+/* Pages */
+.page{display:none;padding:1rem 1rem 0}
+.page.active{display:block}
+
+/* Section titles */
+.section-title{font-family:var(--font-display);font-size:0.78rem;color:var(--gold);letter-spacing:0.2em;margin-bottom:1rem;display:flex;align-items:center;gap:10px}
+.section-title::after{content:'';flex:1;height:0.5px;background:linear-gradient(90deg,var(--border-gold),transparent)}
+
+/* Metric cards */
+.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
+.metric-card{background:var(--bg3);border:0.5px solid var(--border-light);border-radius:12px;padding:0.9rem;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+.metric-label{font-size:0.6rem;color:var(--text-faint);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:6px}
+.metric-value{font-size:1.4rem;font-weight:600;color:var(--text)}
+.metric-value.cyan{color:var(--cyan)}.metric-value.gold{color:var(--gold)}.metric-value.win{color:var(--win)}.metric-value.loss{color:var(--loss)}
+.metric-sub{font-size:0.65rem;color:var(--text-faint);margin-top:3px}
+
+/* Equity card */
+.equity-card{background:var(--bg3);border:0.5px solid var(--border-light);border-radius:12px;padding:1rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+.equity-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.8rem}
+.equity-title{font-size:0.65rem;color:var(--text-faint);letter-spacing:0.15em;text-transform:uppercase}
+.equity-live{font-size:0.55rem;color:var(--win);border:0.5px solid var(--win);border-radius:20px;padding:2px 8px;letter-spacing:0.1em}
+.equity-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.equity-stat-label{font-size:0.55rem;color:var(--text-faint);letter-spacing:0.08em;text-transform:uppercase}
+.equity-stat-value{font-size:0.8rem;font-weight:600;color:var(--text);margin-top:2px}
+.chart-wrap{height:120px;margin:0.5rem 0;position:relative}
+canvas{width:100%!important}
+
+/* Trade cards */
+.trade-card{background:var(--bg3);border-left:2px solid var(--win);border-radius:0 10px 10px 0;border-top:0.5px solid var(--border-light);border-right:0.5px solid var(--border-light);border-bottom:0.5px solid var(--border-light);padding:0.85rem;margin-bottom:0.7rem;position:relative;box-shadow:0 2px 6px rgba(0,0,0,0.04)}
+.trade-card.loss{border-left-color:var(--loss)}.trade-card.be{border-left-color:var(--be)}.trade-card.open{border-left-color:var(--cyan)}
+.trade-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.trade-pair{font-size:0.85rem;font-weight:600;color:var(--text)}
+.trade-pnl{font-size:0.85rem;font-weight:600}
+.trade-pnl.win{color:var(--win)}.trade-pnl.loss{color:var(--loss)}.trade-pnl.be{color:var(--be)}.trade-pnl.open{color:var(--cyan)}
+.trade-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.badge{font-size:0.55rem;padding:2px 8px;border-radius:20px;font-weight:500}
+.badge-long{background:var(--win-bg);color:var(--win);border:0.5px solid var(--win-border)}
+.badge-short{background:var(--loss-bg);color:var(--loss);border:0.5px solid var(--loss-border)}
+.badge-win{background:var(--win-bg);color:var(--win);border:0.5px solid var(--win-border)}
+.badge-loss{background:var(--loss-bg);color:var(--loss);border:0.5px solid var(--loss-border)}
+.badge-be{background:rgba(102,102,136,0.1);color:var(--be);border:0.5px solid rgba(102,102,136,0.25)}
+.badge-open{background:var(--open-bg);color:var(--cyan);border:0.5px solid var(--open-border)}
+.badge-type{background:rgba(201,146,10,0.1);color:var(--gold);border:0.5px solid var(--border-gold)}
+.trade-date{font-size:0.6rem;color:var(--text-faint);margin-left:auto}
+.trade-notes{font-size:0.65rem;color:var(--text-dim);margin-top:6px;line-height:1.5;font-style:italic}
+.trade-delete{position:absolute;top:8px;right:8px;background:var(--loss-bg);border:0.5px solid var(--loss-border);color:var(--loss);border-radius:6px;font-size:0.6rem;padding:2px 7px;cursor:pointer}
+.trade-photo{margin-top:8px;border-radius:6px;overflow:hidden;max-height:120px}
+.trade-photo img{width:100%;object-fit:cover;border-radius:6px}
+
+/* Forms */
+.form-card{background:var(--bg3);border:0.5px solid var(--border-light);border-radius:12px;padding:1rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.05);position:relative;overflow:hidden}
+.form-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--gold))}
+.form-group{margin-bottom:0.8rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0.8rem}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:0.8rem}
+label{display:block;font-size:0.6rem;color:var(--cyan);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:5px;font-weight:600}
+input,select,textarea{width:100%;background:var(--bg4);border:0.5px solid var(--border-light);border-radius:8px;color:var(--text);font-family:var(--font-body);font-size:0.8rem;padding:0.6rem 0.75rem;transition:border-color 0.2s;-webkit-appearance:none;appearance:none}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 2px var(--cyan-glow)}
+select option{background:var(--bg3)}
+textarea{height:70px;resize:vertical}
+
+/* Photo */
+.photo-upload-label{display:flex;align-items:center;gap:8px;background:var(--bg4);border:1px dashed var(--border-light);border-radius:8px;padding:0.7rem 0.75rem;cursor:pointer;transition:border-color 0.2s;color:var(--text-dim);font-size:0.75rem}
+.photo-upload-label:hover{border-color:var(--cyan);color:var(--cyan)}
+.photo-upload-label svg{width:18px;height:18px;stroke:currentColor;fill:none;flex-shrink:0}
+input[type=file]{display:none}
+.photo-preview{margin-top:8px;border-radius:8px;overflow:hidden;max-height:150px;display:none}
+.photo-preview img{width:100%;object-fit:cover;border-radius:8px}
+
+/* Sizer */
+.sizer-box{background:linear-gradient(135deg,rgba(0,153,187,0.06),rgba(201,146,10,0.06));border:0.5px solid var(--border);border-radius:10px;padding:0.8rem;margin:0.8rem 0}
+.sizer-title{font-size:0.6rem;color:var(--cyan);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.6rem;font-weight:600}
+.sizer-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.sizer-label{font-size:0.65rem;color:var(--text-dim)}
+.sizer-value{font-size:0.75rem;font-weight:600;color:var(--text)}
+.sizer-value.gold{color:var(--gold)}.sizer-value.cyan{color:var(--cyan)}
+
+/* Buttons */
+.btn-primary{width:100%;padding:0.85rem;background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:10px;color:#fff;font-family:var(--font-display);font-size:0.8rem;letter-spacing:0.2em;font-weight:700;cursor:pointer;transition:opacity 0.2s,transform 0.15s;margin-top:0.5rem}
+.btn-primary:active{opacity:0.85;transform:scale(0.99)}
+.btn-secondary{width:100%;padding:0.7rem;background:transparent;border:0.5px solid var(--border-light);border-radius:10px;color:var(--text-dim);font-family:var(--font-body);font-size:0.75rem;cursor:pointer;margin-top:0.5rem;transition:border-color 0.2s}
+.btn-secondary:active{border-color:var(--cyan);color:var(--cyan)}
+.btn-danger{width:100%;padding:0.7rem;background:var(--loss-bg);border:0.5px solid var(--loss-border);border-radius:10px;color:var(--loss);font-family:var(--font-body);font-size:0.75rem;cursor:pointer;margin-top:0.5rem}
+.err{font-size:0.65rem;color:var(--loss);margin-top:6px;display:none}
+.err.show{display:block}
+
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem}
+.stat-mini{background:var(--bg3);border:0.5px solid var(--border-light);border-radius:10px;padding:0.7rem;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.04)}
+.stat-mini-label{font-size:0.55rem;color:var(--text-faint);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px}
+.stat-mini-value{font-size:0.85rem;font-weight:600;color:var(--text)}
+
+/* Filter */
+.filter-row{display:flex;gap:8px;margin-bottom:1rem}
+.filter-row select{flex:1;font-size:0.7rem;padding:0.5rem 0.6rem}
+
+/* Settings */
+.settings-section{margin-bottom:1.2rem}
+.settings-label{font-size:0.6rem;color:var(--text-faint);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.5rem;padding-left:2px}
+
+/* Checklist */
+.checklist-section{margin-bottom:1.2rem}
+.checklist-category{font-family:var(--font-display);font-size:0.68rem;color:var(--gold);letter-spacing:0.15em;margin-bottom:0.6rem;display:flex;align-items:center;gap:8px}
+.checklist-category::after{content:'';flex:1;height:0.5px;background:var(--border-gold)}
+.checklist-item{display:flex;align-items:flex-start;gap:10px;padding:0.7rem 0.8rem;margin-bottom:6px;background:var(--bg3);border:0.5px solid var(--border-light);border-radius:10px;cursor:pointer;transition:all 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.04)}
+.checklist-item.checked{border-color:var(--win-border);background:var(--win-bg)}
+.check-box{width:18px;height:18px;min-width:18px;border-radius:4px;border:0.5px solid var(--border-light);background:var(--bg4);display:flex;align-items:center;justify-content:center;transition:all 0.2s;margin-top:1px}
+.checklist-item.checked .check-box{background:var(--win);border-color:var(--win)}
+.check-box svg{width:10px;height:10px;stroke:white;fill:none;display:none}
+.checklist-item.checked .check-box svg{display:block}
+.check-text{font-size:0.72rem;color:var(--text-dim);line-height:1.5}
+.check-text strong{color:var(--text);font-weight:600;display:block;margin-bottom:2px}
+.mindset-item .check-text{font-size:0.68rem;font-style:italic}
+.mindset-item .check-text strong{font-size:0.7rem;font-style:normal}
+
+/* Empty */
+.empty{text-align:center;padding:2.5rem 1rem;color:var(--text-faint);font-size:0.75rem}
+.empty-icon{font-size:2rem;margin-bottom:0.5rem;opacity:0.4}
+
+/* Toast */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--text);border-radius:10px;padding:0.6rem 1.2rem;font-size:0.75rem;color:#fff;z-index:500;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+
+@media(min-width:500px){#app{border-left:0.5px solid var(--border-light);border-right:0.5px solid var(--border-light)}}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-emblem">
+    <svg width="90" height="90" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg">
+      <!-- Outer ring -->
+      <circle cx="45" cy="45" r="42" fill="none" stroke="#c9920a" stroke-width="1.5" opacity="0.6"/>
+      <circle cx="45" cy="45" r="38" fill="none" stroke="#c9920a" stroke-width="0.5" opacity="0.3"/>
+      <!-- Inner fill -->
+      <circle cx="45" cy="45" r="36" fill="rgba(201,146,10,0.06)"/>
+      <!-- Star of 6 points - laurel style -->
+      <g transform="translate(45,45)">
+        <!-- 6 pointed geometric star -->
+        <polygon points="0,-28 6,-14 20,-20 14,-6 28,0 14,6 20,20 6,14 0,28 -6,14 -20,20 -14,6 -28,0 -14,-6 -20,-20 -6,-14" fill="none" stroke="#c9920a" stroke-width="0.8" opacity="0.5"/>
+        <!-- Inner diamond -->
+        <polygon points="0,-16 11,0 0,16 -11,0" fill="none" stroke="#c9920a" stroke-width="1" opacity="0.8"/>
+        <!-- E letter stylised -->
+        <text x="0" y="6" text-anchor="middle" font-family="Cinzel,serif" font-size="16" font-weight="700" fill="#c9920a" letter-spacing="1">E</text>
+        <!-- Cyan accent lines -->
+        <line x1="-18" y1="0" x2="-12" y2="0" stroke="#0099bb" stroke-width="1.5" opacity="0.7"/>
+        <line x1="12" y1="0" x2="18" y2="0" stroke="#0099bb" stroke-width="1.5" opacity="0.7"/>
+        <line x1="0" y1="-18" x2="0" y2="-12" stroke="#0099bb" stroke-width="1.5" opacity="0.7"/>
+        <line x1="0" y1="12" x2="0" y2="18" stroke="#0099bb" stroke-width="1.5" opacity="0.7"/>
+      </g>
+      <!-- Outer dots -->
+      <circle cx="45" cy="4" r="1.5" fill="#c9920a" opacity="0.6"/>
+      <circle cx="45" cy="86" r="1.5" fill="#c9920a" opacity="0.6"/>
+      <circle cx="4" cy="45" r="1.5" fill="#c9920a" opacity="0.6"/>
+      <circle cx="86" cy="45" r="1.5" fill="#c9920a" opacity="0.6"/>
+      <circle cx="14.6" cy="14.6" r="1.2" fill="#0099bb" opacity="0.5"/>
+      <circle cx="75.4" cy="14.6" r="1.2" fill="#0099bb" opacity="0.5"/>
+      <circle cx="14.6" cy="75.4" r="1.2" fill="#0099bb" opacity="0.5"/>
+      <circle cx="75.4" cy="75.4" r="1.2" fill="#0099bb" opacity="0.5"/>
+    </svg>
+  </div>
+  <div class="splash-logo">The Journal<br>of Elysium</div>
+  <div class="splash-sub">Patience &amp; Timing = Clarity</div>
+  <div class="splash-line"></div>
+  <div class="splash-loading">
+    <div class="splash-dot"></div>
+    <div class="splash-dot"></div>
+    <div class="splash-dot"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="header">
+    <div class="header-top">
+      <div class="header-left">
+        <!-- Header emblem -->
+        <svg width="32" height="32" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+          <circle cx="45" cy="45" r="42" fill="none" stroke="#c9920a" stroke-width="2" opacity="0.7"/>
+          <circle cx="45" cy="45" r="36" fill="rgba(201,146,10,0.06)"/>
+          <g transform="translate(45,45)">
+            <polygon points="0,-28 6,-14 20,-20 14,-6 28,0 14,6 20,20 6,14 0,28 -6,14 -20,20 -14,6 -28,0 -14,-6 -20,-20 -6,-14" fill="none" stroke="#c9920a" stroke-width="1" opacity="0.5"/>
+            <polygon points="0,-16 11,0 0,16 -11,0" fill="none" stroke="#c9920a" stroke-width="1.2" opacity="0.9"/>
+            <text x="0" y="6" text-anchor="middle" font-family="Cinzel,serif" font-size="16" font-weight="700" fill="#c9920a" letter-spacing="1">E</text>
+            <line x1="-18" y1="0" x2="-12" y2="0" stroke="#0099bb" stroke-width="2" opacity="0.8"/>
+            <line x1="12" y1="0" x2="18" y2="0" stroke="#0099bb" stroke-width="2" opacity="0.8"/>
+          </g>
+        </svg>
+        <div class="logo">Journal of Elysium<span>Patience &amp; Timing = Clarity</span></div>
+      </div>
+      <div class="header-balance">
+        <div class="header-balance-label">Balance</div>
+        <div class="header-balance-value" id="hdr-balance">$0.00</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <br>
+    <div class="section-title">Overview</div>
+    <div class="metrics-grid">
+      <div class="metric-card"><div class="metric-label">Net P&amp;L</div><div class="metric-value" id="d-pnl">$0.00</div><div class="metric-sub" id="d-pnl-r">0.00R</div></div>
+      <div class="metric-card"><div class="metric-label">Win Rate</div><div class="metric-value cyan" id="d-wr">—</div><div class="metric-sub" id="d-wl">0W / 0L</div></div>
+      <div class="metric-card"><div class="metric-label">Profit Factor</div><div class="metric-value gold" id="d-pf">—</div><div class="metric-sub">Gross W / Gross L</div></div>
+      <div class="metric-card"><div class="metric-label">Avg R:R</div><div class="metric-value" id="d-rr">—</div><div class="metric-sub" id="d-closed">0 closed</div></div>
+    </div>
+    <div class="equity-card">
+      <div class="equity-header"><div class="equity-title">Equity Curve</div><div class="equity-live">LIVE</div></div>
+      <div class="chart-wrap"><canvas id="equity-chart"></canvas></div>
+      <div class="equity-row">
+        <div><div class="equity-stat-label">Start</div><div class="equity-stat-value" id="eq-start">—</div></div>
+        <div><div class="equity-stat-label">Current</div><div class="equity-stat-value" id="eq-current">—</div></div>
+        <div><div class="equity-stat-label">Peak</div><div class="equity-stat-value" id="eq-peak">—</div></div>
+        <div><div class="equity-stat-label">Max DD</div><div class="equity-stat-value" id="eq-dd" style="color:var(--loss)">—</div></div>
+      </div>
+    </div>
+    <div class="section-title">Breakdown</div>
+    <div class="stats-row">
+      <div class="stat-mini"><div class="stat-mini-label">Best Trade</div><div class="stat-mini-value" style="color:var(--win)" id="d-best">—</div></div>
+      <div class="stat-mini"><div class="stat-mini-label">Worst Trade</div><div class="stat-mini-value" style="color:var(--loss)" id="d-worst">—</div></div>
+      <div class="stat-mini"><div class="stat-mini-label">Avg Win</div><div class="stat-mini-value" style="color:var(--win)" id="d-avgw">—</div></div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-mini"><div class="stat-mini-label">Total Trades</div><div class="stat-mini-value" id="d-total">0</div></div>
+      <div class="stat-mini"><div class="stat-mini-label">Open</div><div class="stat-mini-value" style="color:var(--cyan)" id="d-open">0</div></div>
+      <div class="stat-mini"><div class="stat-mini-label">Avg Loss</div><div class="stat-mini-value" style="color:var(--loss)" id="d-avgl">—</div></div>
+    </div>
+    <div class="section-title">Recent Trades</div>
+    <div id="d-recent"></div><br>
+  </div>
+
+  <!-- TRADE LOG -->
+  <div class="page" id="page-log">
+    <br>
+    <div class="section-title">Trade Log</div>
+    <div class="filter-row">
+      <select id="fil-dir" onchange="renderLog()"><option value="">All directions</option><option value="Long">Long</option><option value="Short">Short</option></select>
+      <select id="fil-result" onchange="renderLog()"><option value="">All results</option><option value="Win">Win</option><option value="Loss">Loss</option><option value="Break Even">Break Even</option><option value="Open">Open</option></select>
+    </div>
+    <div id="log-list"></div><br>
+  </div>
+
+  <!-- ADD TRADE -->
+  <div class="page" id="page-add">
+    <br>
+    <div class="section-title">Log Trade</div>
+    <div class="form-card">
+      <div class="form-row">
+        <div class="form-group"><label>Date</label><input type="date" id="f-date"></div>
+        <div class="form-group"><label>Pair / Instrument</label><input type="text" id="f-pair" placeholder="BTC/USDT"></div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group"><label>Type</label><select id="f-type"><option>Crypto</option><option>Forex</option><option>Stocks</option><option>Indices</option><option>Commodities</option></select></div>
+        <div class="form-group"><label>Direction</label><select id="f-dir"><option value="Long">Long</option><option value="Short">Short</option></select></div>
+        <div class="form-group"><label>Session</label><select id="f-session"><option>London</option><option>New York</option><option>LN/NY Overlap</option><option>Asian</option><option>Sydney</option></select></div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group"><label>Entry Price</label><input type="number" id="f-entry" placeholder="0.00" step="any" oninput="calcSizer()"></div>
+        <div class="form-group"><label>Stop Loss</label><input type="number" id="f-sl" placeholder="0.00" step="any" oninput="calcSizer()"></div>
+        <div class="form-group"><label>Take Profit</label><input type="number" id="f-tp" placeholder="0.00" step="any" oninput="calcSizer()"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Risk %</label><input type="number" id="f-risk" placeholder="1" step="0.1" value="1" oninput="calcSizer()"></div>
+        <div class="form-group"><label>Exit Price</label><input type="number" id="f-exit" placeholder="0.00" step="any"></div>
+      </div>
+      <div class="sizer-box">
+        <div class="sizer-title">Position Size Calculator</div>
+        <div class="sizer-row"><span class="sizer-label">Risk Amount</span><span class="sizer-value gold" id="sz-risk">—</span></div>
+        <div class="sizer-row"><span class="sizer-label">Stop Distance</span><span class="sizer-value" id="sz-dist">—</span></div>
+        <div class="sizer-row"><span class="sizer-label">Position Size</span><span class="sizer-value cyan" id="sz-size">—</span></div>
+        <div class="sizer-row"><span class="sizer-label">R:R Ratio</span><span class="sizer-value gold" id="sz-rr">—</span></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Exchange / Broker</label><input type="text" id="f-exchange" placeholder="Binance, FTMO..."></div>
+        <div class="form-group"><label>Strategy</label><input type="text" id="f-strategy" placeholder="Breakout, Scalp..."></div>
+      </div>
+      <div class="form-group"><label>Result</label><select id="f-result"><option value="Open">Open</option><option value="Win">Win</option><option value="Loss">Loss</option><option value="Break Even">Break Even</option></select></div>
+      <div class="form-group"><label>Screenshot Link</label><input type="text" id="f-screenshot" placeholder="TradingView link..."></div>
+      <div class="form-group">
+        <label>Attach Chart Photo</label>
+        <label class="photo-upload-label" for="f-photo">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+          Tap to attach photo from camera or gallery
+        </label>
+        <input type="file" id="f-photo" accept="image/*" capture="environment" onchange="previewPhoto(this)">
+        <div class="photo-preview" id="f-photo-preview"><img id="f-photo-img" src="" alt="Trade chart"></div>
+      </div>
+      <div class="form-group"><label>Notes</label><textarea id="f-notes" placeholder="What was your reasoning? What did you learn?"></textarea></div>
+      <div class="err" id="f-err">Please fill in required fields (pair and entry price).</div>
+      <button class="btn-primary" onclick="addTrade()">Log Trade</button>
+      <button class="btn-secondary" onclick="clearForm()">Clear Form</button>
+    </div><br>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="page" id="page-settings">
+    <br>
+    <div class="section-title">Settings</div>
+    <div class="form-card">
+      <div class="settings-section">
+        <div class="settings-label">Account</div>
+        <div class="form-group"><label>Account Balance ($)</label><input type="number" id="s-balance" placeholder="10000" oninput="saveSettings()"></div>
+        <div class="form-group"><label>Default Risk % Per Trade</label><input type="number" id="s-risk" placeholder="1" step="0.1" oninput="saveSettings()"></div>
+        <div class="form-group"><label>Instrument Type</label><select id="s-instrument" onchange="saveSettings()"><option>Crypto (units)</option><option>Forex (lots)</option><option>Indices (contracts)</option><option>Stocks (shares)</option></select></div>
+      </div>
+    </div>
+    <div class="form-card">
+      <div class="settings-label">Data</div>
+      <button class="btn-secondary" onclick="exportCSV()">Export CSV</button>
+      <button class="btn-danger" onclick="confirmClear()">Clear All Trades</button>
+    </div><br>
+  </div>
+
+  <!-- CHECKLIST -->
+  <div class="page" id="page-check">
+    <br>
+    <div class="section-title">Pre-Trade Checklist</div>
+    <div class="checklist-section">
+      <div class="checklist-category">Core Criteria — Required</div>
+      <div class="checklist-item" onclick="toggleCheck(this)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div class="check-text"><strong>Indication made on the HTF</strong>A clear signal has printed on the higher timeframe.</div></div>
+      <div class="checklist-item" onclick="toggleCheck(this)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div class="check-text"><strong>Correction has started to form on HTF</strong>Price is pulling back as expected after the indication.</div></div>
+      <div class="checklist-item" onclick="toggleCheck(this)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div class="check-text"><strong>Correction finished — continuation started</strong>The pullback is complete and the move is resuming.</div></div>
+      <div class="checklist-item" onclick="toggleCheck(this)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div class="check-text"><strong>Entry signal confirmed — 4H / 1H / 15M all align</strong>All three timeframes confirm the entry model before executing.</div></div>
+      <div class="checklist-item" onclick="toggleCheck(this)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div class="check-text"><strong>Position sized using this journal</strong>Risk calculated — not guessed.</div></div>
+    </div>
+    <div class="checklist-section">
+      <div class="checklist-category">Pre-Market — Daily</div>
+      <div class="checklist-item" onclick="toggleCheck(this)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div class="check-text"><strong>Economic calendar reviewed</strong>No high-impact news during trade window.</div></div>
+      <div class="checklist-item" onclick="toggleCheck(this)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div class="check-text"><strong>Key S/R levels identified — Daily &amp; 4H</strong>Structure mapped on both the daily and 4H timeframes.</div></div>
+      <div class="checklist-item" onclick="toggleCheck(this)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div class="check-text"><strong>Daily bias set</strong>Bullish, bearish or neutral — committed before the session.</div></div>
+    </div>
+    <div class="checklist-section">
+      <div class="checklist-category">Post-Trade Review</div>
+      <div class="checklist-item" onclick="toggleCheck(this)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div class="check-text"><strong>Trade logged in journal</strong>All fields completed accurately.</div></div>
+      <div class="checklist-item" onclick="toggleCheck(this)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div class="check-text"><strong>Screenshot / photo captured</strong>Chart image saved and attached.</div></div>
+      <div class="checklist-item" onclick="toggleCheck(this)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div class="check-text"><strong>Result reviewed honestly</strong>Did I follow my plan exactly?</div></div>
+    </div>
+    <div class="checklist-section">
+      <div class="checklist-category">Psychology &amp; Mindset</div>
+      <div class="checklist-item mindset-item" onclick="toggleCheck(this)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div class="check-text"><strong>Wait for candle closure before entering</strong>Never enter mid-candle. Patience is your edge.</div></div>
+      <div class="checklist-item mindset-item" onclick="toggleCheck(this)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div class="check-text"><strong>Trust the process</strong>Your system works. Execute it without doubt.</div></div>
+      <div class="checklist-item mindset-item" onclick="toggleCheck(this)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div class="check-text"><strong>Manage your trade — do not forget about it</strong>Set your levels and monitor. Don't abandon open positions.</div></div>
+      <div class="checklist-item mindset-item" onclick="toggleCheck(this)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div class="check-text"><strong>HTF consolidation = trade the breakout</strong>When price consolidates on the HTF, the breakout is explosive. Be ready.</div></div>
+      <div class="checklist-item mindset-item" onclick="toggleCheck(this)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div class="check-text"><strong>Detach emotions completely</strong>The market doesn't care about your feelings. Be a machine.</div></div>
+      <div class="checklist-item mindset-item" onclick="toggleCheck(this)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div class="check-text"><strong>Don't chase setups — react, not predict</strong>If you missed it, let it go. The next setup is coming.</div></div>
+      <div class="checklist-item mindset-item" onclick="toggleCheck(this)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div class="check-text"><strong>Mathematical mechanical thinking only</strong>Erase the "making money" mindset. Execute your model with precision.</div></div>
+      <div class="checklist-item mindset-item" onclick="toggleCheck(this)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div class="check-text"><strong>Every rule broken keeps you unprofitable</strong>Discipline is the only thing between you and consistency.</div></div>
+      <div class="checklist-item mindset-item" onclick="toggleCheck(this)" style="border-color:rgba(201,146,10,0.3);background:rgba(201,146,10,0.04)">
+        <div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+        <div class="check-text"><strong style="color:var(--gold)">Believe in yourself, Ryan — God does</strong>You have everything it takes. Now go execute.</div>
+      </div>
+    </div>
+    <button class="btn-secondary" onclick="resetChecklist()">Reset Checklist</button>
+    <br><br>
+  </div>
+</div>
+
+<nav>
+  <button class="active" onclick="showPage('dashboard',this)"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</button>
+  <button onclick="showPage('log',this)"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>Log</button>
+  <button onclick="showPage('add',this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Add</button>
+  <button onclick="showPage('settings',this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Settings</button>
+  <button onclick="showPage('check',this)"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Checklist</button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let trades=[];
+let settings={balance:10000,risk:1,instrument:'Crypto (units)'};
+
+function load(){try{const t=localStorage.getItem('joe_trades');if(t)trades=JSON.parse(t);const s=localStorage.getItem('joe_settings');if(s)settings={...settings,...JSON.parse(s)};}catch(e){}}
+function save(){try{localStorage.setItem('joe_trades',JSON.stringify(trades));localStorage.setItem('joe_settings',JSON.stringify(settings));}catch(e){}}
+function saveSettings(){settings.balance=parseFloat(document.getElementById('s-balance').value)||10000;settings.risk=parseFloat(document.getElementById('s-risk').value)||1;settings.instrument=document.getElementById('s-instrument').value;save();updateHeader();updateDashboard();}
+function updateHeader(){document.getElementById('hdr-balance').textContent='$'+settings.balance.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function showPage(name,btn){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');btn.classList.add('active');if(name==='dashboard')updateDashboard();if(name==='log')renderLog();if(name==='settings')loadSettings();}
+function loadSettings(){document.getElementById('s-balance').value=settings.balance;document.getElementById('s-risk').value=settings.risk;document.getElementById('s-instrument').value=settings.instrument;}
+function calcPnl(t){if(!t.exit||!t.entry||t.result==='Open')return null;const entry=parseFloat(t.entry),exit=parseFloat(t.exit);const sl=t.sl?parseFloat(t.sl):null;const risk=sl?Math.abs(entry-sl):null;const dollarPnl=t.direction==='Long'?(exit-entry):(entry-exit);const size=sl&&risk?(settings.balance*(settings.risk/100))/risk:1;return{dollar:dollarPnl*size,r:risk?(dollarPnl/risk):null};}
+function formatDollar(n){if(n===null||n===undefined)return'—';return(n>=0?'+':'-')+'$'+Math.abs(n).toFixed(2);}
+function tradeCardHTML(t,showDelete=true){const pnl=calcPnl(t);const rc=t.result==='Win'?'win':t.result==='Loss'?'loss':t.result==='Break Even'?'be':'open';const pnlText=pnl?formatDollar(pnl.dollar)+(pnl.r?' ('+pnl.r.toFixed(2)+'R)':''):(t.result==='Open'?'Open':'—');const dirBadge=t.direction==='Long'?'badge-long':'badge-short';const resBadge='badge-'+rc;const photoHTML=t.photo?`<div class="trade-photo"><img src="${t.photo}" alt="Chart"></div>`:'';const notesHTML=t.notes?`<div class="trade-notes">${t.notes}</div>`:'';return`<div class="trade-card ${rc}">${showDelete?`<button class="trade-delete" onclick="deleteTrade(${t.id})">Remove</button>`:''}<div class="trade-top"><div class="trade-pair">${t.pair}</div><div class="trade-pnl ${rc}">${pnlText}</div></div><div class="trade-meta"><span class="badge ${dirBadge}">${t.direction}</span><span class="badge ${resBadge}">${t.result}</span>${t.type?`<span class="badge badge-type">${t.type}</span>`:''}${t.strategy?`<span class="badge badge-type">${t.strategy}</span>`:''}<span class="trade-date">${t.date}</span></div>${notesHTML}${photoHTML}</div>`;}
+
+function updateDashboard(){
+  const closed=trades.filter(t=>t.result!=='Open');
+  const wins=trades.filter(t=>t.result==='Win');
+  const losses=trades.filter(t=>t.result==='Loss');
+  const pnls=closed.map(t=>calcPnl(t)).filter(p=>p);
+  const totalDollar=pnls.reduce((a,b)=>a+(b.dollar||0),0);
+  const totalR=pnls.reduce((a,b)=>a+(b.r||0),0);
+  const winPnls=pnls.filter(p=>p.dollar>0).map(p=>p.dollar);
+  const lossPnls=pnls.filter(p=>p.dollar<0).map(p=>p.dollar);
+  const wr=closed.length?Math.round(wins.length/closed.length*100):null;
+  const grossW=winPnls.reduce((a,b)=>a+b,0);
+  const grossL=Math.abs(lossPnls.reduce((a,b)=>a+b,0));
+  const pf=grossL>0?(grossW/grossL).toFixed(2):grossW>0?'∞':'—';
+  const rrVals=trades.filter(t=>t.sl&&t.tp&&t.entry).map(t=>{const e=parseFloat(t.entry),s=parseFloat(t.sl),tp=parseFloat(t.tp);const risk=Math.abs(e-s),reward=Math.abs(tp-e);return risk?reward/risk:null;}).filter(v=>v);
+  const avgRR=rrVals.length?(rrVals.reduce((a,b)=>a+b,0)/rrVals.length).toFixed(2):'—';
+  const best=winPnls.length?Math.max(...winPnls):null;
+  const worst=lossPnls.length?Math.min(...lossPnls):null;
+  const avgW=winPnls.length?(winPnls.reduce((a,b)=>a+b,0)/winPnls.length):null;
+  const avgL=lossPnls.length?(lossPnls.reduce((a,b)=>a+b,0)/lossPnls.length):null;
+  const pnlEl=document.getElementById('d-pnl');
+  pnlEl.textContent=formatDollar(totalDollar);
+  pnlEl.className='metric-value '+(totalDollar>=0?'win':'loss');
+  document.getElementById('d-pnl-r').textContent=(totalR>=0?'+':'')+totalR.toFixed(2)+'R';
+  document.getElementById('d-wr').textContent=wr!==null?wr+'%':'—';
+  document.getElementById('d-wl').textContent=wins.length+'W / '+losses.length+'L';
+  document.getElementById('d-pf').textContent=pf;
+  document.getElementById('d-rr').textContent=avgRR;
+  document.getElementById('d-closed').textContent=closed.length+' closed';
+  document.getElementById('d-total').textContent=trades.length;
+  document.getElementById('d-open').textContent=trades.filter(t=>t.result==='Open').length;
+  document.getElementById('d-best').textContent=best?formatDollar(best):'—';
+  document.getElementById('d-worst').textContent=worst?formatDollar(worst):'—';
+  document.getElementById('d-avgw').textContent=avgW?formatDollar(avgW):'—';
+  document.getElementById('d-avgl').textContent=avgL?formatDollar(avgL):'—';
+  drawEquity(pnls,totalDollar);
+  const recent=trades.slice(0,3);
+  document.getElementById('d-recent').innerHTML=recent.length?recent.map(t=>tradeCardHTML(t,false)).join(''):'<div class="empty"><div class="empty-icon">📈</div>No trades logged yet.<br>Tap Add to log your first trade.</div>';
+}
+
+function drawEquity(pnls,totalDollar){
+  const canvas=document.getElementById('equity-chart');
+  const ctx=canvas.getContext('2d');
+  canvas.width=canvas.offsetWidth*2;canvas.height=240;ctx.scale(2,1);
+  const w=canvas.offsetWidth,h=120;
+  let points=[settings.balance];let running=settings.balance;
+  pnls.forEach(p=>{running+=p.dollar;points.push(running);});
+  const peak=Math.max(...points);const trough=Math.min(...points);const range=peak-trough||1;const pad=10;
+  const px=(i)=>pad+(i/(points.length-1||1))*(w-pad*2);
+  const py=(v)=>h-pad-((v-trough)/range)*(h-pad*2);
+  ctx.clearRect(0,0,w,h);
+  if(points.length>1){
+    const grad=ctx.createLinearGradient(0,0,0,h);grad.addColorStop(0,'rgba(0,153,187,0.2)');grad.addColorStop(1,'rgba(0,153,187,0)');
+    ctx.beginPath();ctx.moveTo(px(0),py(points[0]));points.forEach((v,i)=>ctx.lineTo(px(i),py(v)));ctx.lineTo(px(points.length-1),h);ctx.lineTo(px(0),h);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+    ctx.beginPath();ctx.moveTo(px(0),py(points[0]));points.forEach((v,i)=>ctx.lineTo(px(i),py(v)));ctx.strokeStyle=totalDollar>=0?'#0099bb':'#cc2200';ctx.lineWidth=1.5;ctx.stroke();
+  } else {ctx.strokeStyle='rgba(0,153,187,0.3)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,h/2);ctx.lineTo(w,h/2);ctx.stroke();}
+  const current=settings.balance+pnls.reduce((a,b)=>a+(b.dollar||0),0);
+  const maxDD=points.reduce((dd,v,i)=>{const p2=Math.max(...points.slice(0,i+1));return Math.max(dd,p2-v);},0);
+  document.getElementById('eq-start').textContent='$'+settings.balance.toLocaleString();
+  document.getElementById('eq-current').textContent='$'+current.toFixed(0);
+  document.getElementById('eq-peak').textContent='$'+peak.toFixed(0);
+  document.getElementById('eq-dd').textContent=maxDD>0?'-$'+maxDD.toFixed(2):'—';
+}
+
+function renderLog(){const dirF=document.getElementById('fil-dir').value;const resF=document.getElementById('fil-result').value;const filtered=trades.filter(t=>{if(dirF&&t.direction!==dirF)return false;if(resF&&t.result!==resF)return false;return true;});document.getElementById('log-list').innerHTML=filtered.length?filtered.map(t=>tradeCardHTML(t,true)).join(''):'<div class="empty"><div class="empty-icon">📋</div>No trades found.</div>';}
+
+function previewPhoto(input){const file=input.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>{document.getElementById('f-photo-img').src=e.target.result;document.getElementById('f-photo-preview').style.display='block';};reader.readAsDataURL(file);}
+
+function addTrade(){
+  const pair=document.getElementById('f-pair').value.trim();
+  const entry=document.getElementById('f-entry').value;
+  const err=document.getElementById('f-err');
+  if(!pair||!entry){err.classList.add('show');return;}
+  err.classList.remove('show');
+  const photoImg=document.getElementById('f-photo-img');
+  const photo=photoImg.src&&photoImg.src!==window.location.href?photoImg.src:'';
+  const t={id:Date.now(),date:document.getElementById('f-date').value,pair,type:document.getElementById('f-type').value,direction:document.getElementById('f-dir').value,session:document.getElementById('f-session').value,entry,sl:document.getElementById('f-sl').value,tp:document.getElementById('f-tp').value,exit:document.getElementById('f-exit').value,risk:document.getElementById('f-risk').value,exchange:document.getElementById('f-exchange').value.trim(),strategy:document.getElementById('f-strategy').value.trim(),result:document.getElementById('f-result').value,screenshot:document.getElementById('f-screenshot').value.trim(),notes:document.getElementById('f-notes').value.trim(),photo};
+  trades.unshift(t);save();showToast('Trade logged successfully');clearForm();showPage('dashboard',document.querySelector('nav button'));
+}
+
+function clearForm(){['f-pair','f-entry','f-sl','f-tp','f-exit','f-exchange','f-strategy','f-screenshot','f-notes'].forEach(id=>{document.getElementById(id).value='';});document.getElementById('f-risk').value=settings.risk;document.getElementById('f-date').value=new Date().toISOString().split('T')[0];document.getElementById('f-result').value='Open';document.getElementById('f-photo').value='';document.getElementById('f-photo-img').src='';document.getElementById('f-photo-preview').style.display='none';calcSizer();}
+
+function calcSizer(){const entry=parseFloat(document.getElementById('f-entry').value);const sl=parseFloat(document.getElementById('f-sl').value);const tp=parseFloat(document.getElementById('f-tp').value);const risk=parseFloat(document.getElementById('f-risk').value)||settings.risk;const riskAmt=settings.balance*(risk/100);document.getElementById('sz-risk').textContent=riskAmt?'$'+riskAmt.toFixed(2):'—';if(entry&&sl){const dist=Math.abs(entry-sl);const size=riskAmt/dist;document.getElementById('sz-dist').textContent=dist.toFixed(4);document.getElementById('sz-size').textContent=size.toFixed(4);}else{document.getElementById('sz-dist').textContent='—';document.getElementById('sz-size').textContent='—';}if(entry&&sl&&tp){const r=Math.abs(entry-sl),rw=Math.abs(tp-entry);document.getElementById('sz-rr').textContent=(rw/r).toFixed(2)+'R';}else{document.getElementById('sz-rr').textContent='—';}}
+
+function deleteTrade(id){if(!confirm('Remove this trade?'))return;trades=trades.filter(t=>t.id!==id);save();renderLog();updateDashboard();showToast('Trade removed');}
+function confirmClear(){if(!confirm('Clear all trades? This cannot be undone.'))return;trades=[];save();updateDashboard();renderLog();showToast('All trades cleared');}
+function exportCSV(){if(!trades.length){showToast('No trades to export');return;}const headers=['Date','Pair','Type','Direction','Session','Entry','SL','TP','Exit','Risk%','Exchange','Strategy','Result','Notes'];const rows=trades.map(t=>[t.date,t.pair,t.type,t.direction,t.session,t.entry,t.sl,t.tp,t.exit,t.risk,t.exchange,t.strategy,t.result,t.notes].map(v=>`"${v||''}"`).join(','));const csv=headers.join(',')+'\n'+rows.join('\n');const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='journal-of-elysium-'+new Date().toISOString().split('T')[0]+'.csv';a.click();showToast('CSV exported');}
+function toggleCheck(el){el.classList.toggle('checked')}
+function resetChecklist(){document.querySelectorAll('.checklist-item').forEach(el=>el.classList.remove('checked'))}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+load();
+document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
+document.getElementById('f-risk').value=settings.risk;
+loadSettings();updateHeader();updateDashboard();
+setTimeout(()=>{document.getElementById('splash').classList.add('hide');setTimeout(()=>document.getElementById('splash').remove(),800);},2200);
+window.addEventListener('resize',()=>{if(document.getElementById('page-dashboard').classList.contains('active'))updateDashboard();});
+</script>
+</body>
+</html>
